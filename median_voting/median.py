@@ -66,8 +66,7 @@ class MedianStatistics(object):
         if sorted:
             self.sorted_votes = votes
         else:
-            self.sorted_votes = votes
-            self.sorted_votes = self.sort_votes()
+            self.sorted_votes = self.sort_votes(votes)
 
     @staticmethod
     def sort_votes(votes):
