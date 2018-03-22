@@ -40,11 +40,14 @@ class MedianVote(object):
         self.value = value
         self.weight = weight
 
+    def __repr__(self):
+        return "median_voting.MedianVote(value=%d, weight=%d)" % (self.value, self.weight)
+
 
 class MedianStatistics(object):
     """ A class for retrieving results from a median vote.
 
-    The list of votes must be sorted for these functions to operate correctly.
+    The list of votes must be sorted for the functions to operate correctly.
 
     Args:
         votes (list of MedianVote): All votes you want results for.
@@ -55,15 +58,8 @@ class MedianStatistics(object):
         sorted_votes (list of MedianVote): The list of sorted votes.
     """
 
-    ops = {
-        'lt': operator.lt,
-        'le': operator.le,
-        'gt': operator.gt,
-        'ge': operator.ge
-    }
-
-    def __init__(self, votes, sorted=False):
-        if sorted:
+    def __init__(self, votes, is_sorted=False):
+        if is_sorted:
             self.sorted_votes = votes
         else:
             self.sorted_votes = self.sort_votes(votes)
@@ -73,7 +69,8 @@ class MedianStatistics(object):
         """ Sorts the votes in decreasing order and returns the result.
 
         Usually you don't have to sort the elements by yourself, the __init__
-        method will take care of this.
+        method will take care of this. But if the elements are already sorted
+        from for example a database there is no need to sort them again.
 
         Args:
             votes (list of MedianVote): The votes to sort.
@@ -82,6 +79,60 @@ class MedianStatistics(object):
             list of MedianVote: The sorted votes.
         """
         return sorted(votes, key=lambda vote: vote.value, reverse=True)
+
+    def details(self, values=None, is_sorted=False):
+        """ Shows details about the vote.
+
+        The result is a dictionary that contains an entry for each value from values. Each value is mapped to a tuple
+        (num_weights, voters_list). num_weights is the number of vote weights that voted for >= value.
+        voters_list is the list of all MedianVotes that voted for >= value.
+
+        Args:
+            values (list of integer): The entries of the result dictionary. That is the keys you want to receive results
+                for. If it is not None then the set of all values appearing in the voting is used. It should not contain
+                duplicates.
+            is_sorted (bool): If set to True the values list / tuple is assumed to be sorted according to >. Otherwise
+                values will be sorted first (without changing the input).
+
+        Returns:
+            dict int to tuple: See explanation above.
+        """
+        items = self.__prepare_values__(values, is_sorted)
+        i, j = 0, 0
+        _sum = 0
+        all_voters = []
+        res = dict()
+        while i < len(self.sorted_votes) and j < len(items):
+            next_entry = self.sorted_votes[i]
+            next_compare = items[j]
+            if next_entry.value >= next_compare:
+                current_values = None
+                if next_compare not in res:
+                    current_values = list(all_voters)
+                else:
+                    current_values = res[next_compare][1]
+                _sum += next_entry.weight
+                all_voters.append(i)
+                current_values.append(i)
+                res[next_compare] = _sum, current_values
+                i += 1
+            else:
+                if next_compare not in res:
+                    res[next_compare] = _sum, list(all_voters)
+                j += 1
+        while j < len(items):
+            next_compare = items[j]
+            if next_compare not in res:
+                res[next_compare] = _sum, list(all_voters)
+            j += 1
+        return res
+
+    def __prepare_values__(self, values=None, is_sorted=False):
+        if values is None:
+            values = sorted({vote.value for vote in self.sorted_votes}, reverse=True)
+        elif not is_sorted:
+            values = sorted(values, reverse=True)
+        return values
 
     def weight_sum(self):
         """ Returns the sum of all weights in the votes list.
@@ -105,7 +156,8 @@ class MedianStatistics(object):
             That is also the behaviour if you don't specify votes_required.
 
         Args:
-            votes_required (int): The number of votes TODO
+            votes_required (int): The number of votes required for a majority. That is: > than (strictly!) this value
+                are required. If it is not given it set to the weight sum // 2.
         """
         if votes_required is None:
             votes_required = self.weight_sum() // 2
