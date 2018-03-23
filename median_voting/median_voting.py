@@ -22,8 +22,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import operator
-
 
 class MedianVote(object):
     """Class for a vote in a median voting
@@ -86,6 +84,9 @@ class MedianStatistics(object):
         The result is a dictionary that contains an entry for each value from values. Each value is mapped to a tuple
         (num_weights, voters_list). num_weights is the number of vote weights that voted for >= value.
         voters_list is the list of all MedianVotes that voted for >= value.
+
+        Note:
+            This method is rather experimental at the moment.
 
         Args:
             values (list of integer): The entries of the result dictionary. That is the keys you want to receive results
