@@ -39,7 +39,7 @@ def test_median_one():
 
 
 def test_median_two():
-    v1 = MedianVote(0, 1)
+    v1 = MedianVote(0)
     v2 = MedianVote(150, 2)
     v3 = MedianVote(200, 3)
 

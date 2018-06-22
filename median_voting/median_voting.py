@@ -83,10 +83,15 @@ class MedianStatistics(object):
 
         The result is a dictionary that contains an entry for each value from values. Each value is mapped to a tuple
         (num_weights, voters_list). num_weights is the number of vote weights that voted for >= value.
-        voters_list is the list of all MedianVotes that voted for >= value.
+        voters_list is the list of all MedianVotes that voted for >= value (identified by an index
+        in the sorted list).
 
         Note:
             This method is rather experimental at the moment.
+            The votes in the result list are identified by the sorted id, that is it stores the position
+            of that vote in the sorted list. Thus this index must not be the same as in the input list!
+            One solution would be to use only sorted lists from the beginning or to subclass MedianVote and store
+            additional information there.
 
         Args:
             values (list of integer): The entries of the result dictionary. That is the keys you want to receive results
